@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -15,19 +15,23 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.35 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;max-width:560px;margin-inline:auto;padding:14px 14px 90px}
 button{cursor:pointer;font-family:inherit;color:inherit}
 button:focus-visible{outline:3px solid var(--g);outline-offset:2px}
-.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px}
 .top h1{margin:0;font-size:30px;font-weight:700;letter-spacing:.3px}
-.ed{padding:8px 16px;border-radius:20px;border:1px solid var(--line);background:var(--card);font-size:17px;font-weight:600}
-.ed[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.acts{display:flex;gap:6px}
+.ed,.lg{padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);font-size:17px;font-weight:600}
+.lg{padding:8px 11px;font-weight:700}
+.ed[aria-pressed="true"],.lg[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
 .tabs button{--g:#888;padding:9px 2px;border:1px solid var(--line);background:var(--card);border-radius:12px;font-size:16px;font-weight:600;line-height:1.1;display:flex;flex-direction:column;align-items:center;gap:3px}
 .tabs button svg{color:var(--g)}
 .tabs button[aria-selected="true"]{background:var(--g);border-color:var(--g);color:#fff}
 .tabs button[aria-selected="true"] svg{color:#fff}
-.hero{position:relative;overflow:hidden;border-radius:20px;padding:20px 18px;margin-bottom:12px;color:#fff;background:linear-gradient(135deg,var(--g),color-mix(in srgb,var(--g) 50%,#000));display:flex;align-items:center;justify-content:space-between;min-height:130px}
+.hero{position:relative;overflow:hidden;border-radius:20px;padding:20px 18px;margin-bottom:12px;color:#fff;background:linear-gradient(135deg,var(--g),color-mix(in srgb,var(--g) 50%,#000));display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:130px}
 .hero .bg{position:absolute;right:-18px;top:-22px;opacity:.16;transform:rotate(-14deg)}
-.hero h2{margin:0;font-size:44px;line-height:.95;font-weight:700;position:relative}
-.hero p{margin:6px 0 0;font-size:19px;opacity:.92;position:relative}
+.hero .tx{flex:1;min-width:0;position:relative}
+.hero h2{margin:0;font-size:44px;line-height:.95;font-weight:700}
+.hero p{margin:6px 0 0;font-size:19px;opacity:.92}
+.gn{font:inherit;font-size:36px;font-weight:700;color:#fff;background:transparent;border:0;border-bottom:2px dashed rgba(255,255,255,.7);width:100%;padding:0;border-radius:0}
 .ring{position:relative;flex:none}
 .ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:22px}
 .pre{display:flex;gap:6px;margin-bottom:12px}
@@ -39,6 +43,7 @@ button:focus-visible{outline:3px solid var(--g);outline-offset:2px}
 .row{display:flex;align-items:center;gap:12px}
 .badge{width:46px;height:46px;flex:none;border-radius:14px;display:grid;place-items:center;color:var(--g);background:color-mix(in srgb,var(--g) 14%,transparent)}
 .name{flex:1;font-size:21px;font-weight:600;line-height:1.1}
+.nm{flex:1;min-width:0;font:inherit;font-size:21px;font-weight:600;color:var(--ink);background:transparent;border:0;border-bottom:2px dashed var(--mute);padding:2px 0;border-radius:0}
 .chk{width:34px;height:34px;flex:none;border-radius:50%;border:2px solid var(--mute);background:transparent;display:grid;place-items:center;padding:0;font-size:18px}
 .on .chk{background:var(--g);border-color:var(--g);color:#fff}
 .del{width:40px;height:40px;flex:none;border-radius:12px;border:1px solid #e0485a;background:transparent;color:#e0485a;display:grid;place-items:center;padding:0}
@@ -55,76 +60,98 @@ button:focus-visible{outline:3px solid var(--g);outline-offset:2px}
 </style>
 </head>
 <body>
-<div class="top"><h1>My routine</h1><button class="ed" id="ed" aria-pressed="false">Edit</button></div>
+<div class="top"><h1 id="ttl">My routine</h1><div class="acts"><button class="lg" data-lang="en">EN</button><button class="lg" data-lang="es">ES</button><button class="ed" id="ed" aria-pressed="false">Edit</button></div></div>
 <div class="tabs" id="tabs" role="tablist"></div>
 <div id="hero"></div>
 <div class="pre" id="pre"></div>
 <div id="list"></div>
 <div id="foot"></div>
-<div class="toast" id="toast" role="status"><span>Exercise deleted</span><button id="undo">Undo</button></div>
+<div class="toast" id="toast" role="status"><span id="tmsg"></span><button id="undo">Undo</button></div>
 
 <script>
-var IC={d:'<path d="M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12"/>',b:'<path d="M1 12h22M4 8v8M7 5v14M17 5v14M20 8v8"/>',m:'<circle cx="12" cy="5" r="2.5"/><path d="M12 7.5V15M8 15h8v6H8z"/>',p:'<path d="M3 4h18M7 4v5M17 4v5M10 9h4l-.5 5h-3zM10.5 14L9 21M13.5 14l1.5 7"/>',t:'<path d="M3 11h18M3 11l2 9M21 11l-2 9M8 11l1 9M16 11l-1 9M12 11v9"/>'};
+var IC={d:'<path d="M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12"/>',b:'<path d="M1 12h22M4 8v8M7 5v14M17 5v14M20 8v8"/>',m:'<circle cx="12" cy="5" r="2.5"/><path d="M12 7.5V15M8 15h8v6H8z"/>',p:'<path d="M3 4h18M7 4v5M17 4v5M10 9h4l-.5 5h-3zM10.5 14L9 21M13.5 14l1.5 7"/>'};
 function svg(t,s,w){return '<svg viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="none" stroke="currentColor" stroke-width="'+(w||1.8)+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+IC[t]+'</svg>'}
 var TRASH='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
+var T={
+en:{ttl:"My routine",edit:"Edit",done:"Done",warm:"Warm up with low weight",cardio:"Cardio 12 min",reset:"New workout",cleared:"Checkmarks cleared",add:"Add exercise",newEx:"New exercise",restore:"Restore ",deleted:" deleted",del:"Exercise deleted",undo:"Undo",empty:"No exercises left in this group.",bw:"bodyweight",lw:"Less weight",mw:"More weight",fr:"Fewer reps",mr:"More reps",dn:function(a,b){return a+" of "+b+" exercises done"}},
+es:{ttl:"Mi rutina",edit:"Editar",done:"Listo",warm:"Calentar con peso bajo",cardio:"Cardio 12 min",reset:"Nuevo entrenamiento",cleared:"Marcas borradas",add:"Añadir ejercicio",newEx:"Nuevo ejercicio",restore:"Restaurar ",deleted:" eliminados",del:"Ejercicio eliminado",undo:"Deshacer",empty:"No quedan ejercicios en este grupo.",bw:"peso corporal",lw:"Menos peso",mw:"Más peso",fr:"Menos reps",mr:"Más reps",dn:function(a,b){return a+" de "+b+" ejercicios hechos"}}
+};
 var G=[
-{n:"Shoulders",c:"#f27a1a",i:"d",e:[["Side delts",15,6,"d"],["Pec dec",60,5,"m"],["Pec dec yellow",35,6,"m"],["Facepulls",60,5,"m"],["Forearms arms",10,5,"d"],["Rear delt barbell",25,6,"b"],["Rear delt dumbbell",12.5,12,"d"]]},
-{n:"Back & biceps",c:"#2f7df0",i:"p",e:[["Pull ups",null,4,"p"],["Pull ups close grip",null,4,"p"],["Pulldown mag",55,7,"m"],["Row",40,11,"m"],["Lat pulldown barbell",65,4,"m"],["Lat pulldown square",60,4,"m"],["Lat pulldown wider grip",40,8,"m"],["Preacher curl machine",35,3,"m"],["Barbell biceps curl",30,5,"b"],["Hammer curl",15,4,"d"],["Lower back",17.5,3,"m"]]},
-{n:"Chest & triceps",c:"#e23b57",i:"b",e:[["Pec dec",65,5,"m"],["Seated bench press",35,6,"m"],["Manual bench press",27.5,3,"d"],["Inclined bench press (7-4)",7.5,5,"d"],["Triceps pulley",70,2,"m"],["Triceps pulley 2",40,5,"m"]]},
-{n:"Legs",c:"#17a862",i:"m",e:[["Glute isolator",45,6,"m"],["Leg curl",60,6,"m"],["Single-leg curl (manual)",25,4,"d"],["Single-leg quads",50,5,"m"],["Quads",75,6,"m"],["Seated calf raise",50,5,"m"]]}
+{n:"Shoulders",s:"Hombros",c:"#f27a1a",i:"d",e:[["Side delts",15,6,"d","Deltoides laterales"],["Pec dec",60,5,"m","Pec dec"],["Pec dec yellow",35,6,"m","Pec dec amarillo"],["Facepulls",60,5,"m","Facepulls"],["Forearms arms",10,5,"d","Antebrazos"],["Rear delt barbell",25,6,"b","Deltoide posterior barra"],["Rear delt dumbbell",12.5,12,"d","Deltoide posterior mancuernas"]]},
+{n:"Back & biceps",s:"Espalda y bíceps",c:"#2f7df0",i:"p",e:[["Pull ups",null,4,"p","Dominadas"],["Pull ups close grip",null,4,"p","Dominadas agarre cerrado"],["Pulldown mag",55,7,"m","Pulldown mag"],["Row",40,11,"m","Remo"],["Lat pulldown barbell",65,4,"m","Jalón al pecho barra"],["Lat pulldown square",60,4,"m","Jalón al pecho cuadrado"],["Lat pulldown wider grip",40,8,"m","Jalón agarre ancho"],["Preacher curl machine",35,3,"m","Curl predicador máquina"],["Barbell biceps curl",30,5,"b","Bíceps con barra"],["Hammer curl",15,4,"d","Martillo"],["Lower back",17.5,3,"m","Lumbares"]]},
+{n:"Chest & triceps",s:"Pecho y tríceps",c:"#e23b57",i:"b",e:[["Pec dec",65,5,"m","Pec dec"],["Seated bench press",35,6,"m","Press de banca sentado"],["Manual bench press",27.5,3,"d","Press de banca manual"],["Inclined bench press (7-4)",7.5,5,"d","Press inclinado (7-4)"],["Triceps pulley",70,2,"m","Polea tríceps"],["Triceps pulley 2",40,5,"m","Polea tríceps 2"]]},
+{n:"Legs",s:"Piernas",c:"#17a862",i:"m",e:[["Glute isolator",45,6,"m","Glúteo aislado"],["Leg curl",60,6,"m","Curl femoral"],["Single-leg curl (manual)",25,4,"d","Curl femoral individual (manual)"],["Single-leg quads",50,5,"m","Cuádriceps individual"],["Quads",75,6,"m","Cuádriceps"],["Seated calf raise",50,5,"m","Pantorrillas sentado"]]}
 ];
-var PRE=[["🔥","Warm up with low weight"],["🏃","Cardio 12 min"]];
-var S={tab:0,w:{},r:{},d:{},p:{},x:{}},edit=false,last=null,tt=null;
-try{var raw=localStorage.getItem("gym-v2")||localStorage.getItem("gym-v1");if(raw){var o=JSON.parse(raw);if(o&&typeof o==="object"){S.tab=o.tab||0;S.w=o.w||{};S.r=o.r||{};S.d=o.d||{};S.p=o.p||{};S.x=o.x||{};}}}catch(e){}
-function save(){try{localStorage.setItem("gym-v2",JSON.stringify(S));}catch(e){}}
+var S={tab:0,w:{},r:{},d:{},p:{},x:{},nm:{},gn:{},add:{},lang:(navigator.language||"en").slice(0,2)==="es"?"es":"en"},edit=false,last=null,tt=null;
+try{var raw=localStorage.getItem("gym-v3")||localStorage.getItem("gym-v2")||localStorage.getItem("gym-v1");if(raw){var o=JSON.parse(raw);if(o&&typeof o==="object"){["w","r","d","p","x","nm","gn","add"].forEach(function(f){if(o[f]&&typeof o[f]==="object")S[f]=o[f];});S.tab=o.tab||0;if(o.lang==="es"||o.lang==="en")S.lang=o.lang;}}}catch(e){}
+function save(){try{localStorage.setItem("gym-v3",JSON.stringify(S));}catch(e){}}
+function L(){return T[S.lang]}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
 function key(t,i){return t+"-"+i}
-function kg(t,i){var k=key(t,i);return k in S.w?S.w[k]:G[t].e[i][1]}
-function rp(t,i){var k=key(t,i);return k in S.r?S.r[k]:G[t].e[i][2]}
-function fmt(x){return String(x)}
+function list(t){return G[t].e.concat(S.add[t]||[])}
+function nameOf(t,i){var k=key(t,i);if(k in S.nm)return S.nm[k];var e=list(t)[i];return S.lang==="es"&&e[4]?e[4]:e[0]}
+function gname(t){return t in S.gn?S.gn[t]:(S.lang==="es"?G[t].s:G[t].n)}
+function kg(t,i){var k=key(t,i);return k in S.w?S.w[k]:list(t)[i][1]}
+function rp(t,i){var k=key(t,i);return k in S.r?S.r[k]:list(t)[i][2]}
+function renderTabs(){var t=S.tab;document.getElementById("tabs").innerHTML=G.map(function(x,i){return '<button style="--g:'+x.c+'" role="tab" aria-selected="'+(i===t)+'" data-tab="'+i+'">'+svg(x.i,22)+esc(gname(i))+'</button>'}).join("")}
 function render(){
- var t=S.tab,g=G[t],h="",vis=0,gd=0,gone=0;
+ var t=S.tab,g=G[t],l=L(),h="",vis=0,gd=0,gone=0,ls=list(t);
  document.body.style.setProperty("--g",g.c);
- document.getElementById("tabs").innerHTML=G.map(function(x,i){return '<button style="--g:'+x.c+'" role="tab" aria-selected="'+(i===t)+'" data-tab="'+i+'">'+svg(x.i,22)+x.n+'</button>'}).join("");
- g.e.forEach(function(e,i){
+ document.documentElement.lang=S.lang;
+ document.getElementById("ttl").textContent=l.ttl;
+ document.title=l.ttl;
+ renderTabs();
+ ls.forEach(function(e,i){
   var k=key(t,i);
   if(S.x[k]){gone++;return;}
   vis++;
-  var on=S.d[k],w=kg(t,i),r=rp(t,i);
+  var on=S.d[k],w=kg(t,i),r=rp(t,i),nm=esc(nameOf(t,i));
   if(on)gd++;
-  h+='<div class="ex '+(on&&!edit?'on':'')+'"><div class="row"><div class="badge">'+svg(e[3],26)+'</div><span class="name">'+e[0]+'</span>';
-  h+=edit?'<button class="del" data-del="'+i+'" aria-label="Delete '+e[0]+'">'+TRASH+'</button>':'<button class="chk" data-done="'+i+'" aria-label="Done: '+e[0]+'" aria-pressed="'+!!on+'">'+(on?'✓':'')+'</button>';
+  h+='<div class="ex '+(on&&!edit?'on':'')+'"><div class="row"><div class="badge">'+svg(e[3],26)+'</div>';
+  h+=edit?'<input class="nm" data-nm="'+i+'" value="'+nm+'" aria-label="Name">':'<span class="name">'+nm+'</span>';
+  h+=edit?'<button class="del" data-del="'+i+'" aria-label="Delete">'+TRASH+'</button>':'<button class="chk" data-done="'+i+'" aria-label="Done" aria-pressed="'+!!on+'">'+(on?'✓':'')+'</button>';
   h+='</div><div class="ctl">';
-  if(w!==null){h+='<div class="st"><button data-w="'+i+'" data-d="-2.5" aria-label="Less weight">−</button><b>'+fmt(w)+'<small> kg</small></b><button data-w="'+i+'" data-d="2.5" aria-label="More weight">+</button></div>';}
-  else{h+='<div class="st"><b><small>bodyweight</small></b></div>';}
-  h+='<div class="st"><button data-r="'+i+'" data-d="-1" aria-label="Fewer reps">−</button><b>'+r+'<small> reps</small></b><button data-r="'+i+'" data-d="1" aria-label="More reps">+</button></div></div></div>';
+  if(w!==null){h+='<div class="st"><button data-w="'+i+'" data-d="-2.5" aria-label="'+l.lw+'">−</button><b>'+w+'<small> kg</small></b><button data-w="'+i+'" data-d="2.5" aria-label="'+l.mw+'">+</button></div>';}
+  else{h+='<div class="st"><b><small>'+l.bw+'</small></b></div>';}
+  h+='<div class="st"><button data-r="'+i+'" data-d="-1" aria-label="'+l.fr+'">−</button><b>'+r+'<small> reps</small></b><button data-r="'+i+'" data-d="1" aria-label="'+l.mr+'">+</button></div></div></div>';
  });
- if(!vis)h='<div class="empty">No exercises left in this group.</div>';
+ if(!vis)h='<div class="empty">'+l.empty+'</div>';
  document.getElementById("list").innerHTML=h;
  var pct=vis?gd/vis:0,C=2*Math.PI*30;
- document.getElementById("hero").innerHTML='<div class="hero"><span class="bg">'+svg(g.i,170,1.2)+'</span><div><h2>'+g.n+'</h2><p>'+gd+' of '+vis+' exercises done</p></div><div class="ring"><svg width="76" height="76" viewBox="0 0 76 76"><circle cx="38" cy="38" r="30" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="7"/><circle cx="38" cy="38" r="30" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-dasharray="'+(C*pct)+' '+C+'" transform="rotate(-90 38 38)"/></svg><b>'+Math.round(pct*100)+'%</b></div></div>';
+ var title=edit?'<input class="gn" data-gn="1" value="'+esc(gname(t))+'" aria-label="Name">':'<h2>'+esc(gname(t))+'</h2>';
+ document.getElementById("hero").innerHTML='<div class="hero"><span class="bg">'+svg(g.i,170,1.2)+'</span><div class="tx">'+title+'<p>'+l.dn(gd,vis)+'</p></div><div class="ring"><svg width="76" height="76" viewBox="0 0 76 76"><circle cx="38" cy="38" r="30" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="7"/><circle cx="38" cy="38" r="30" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-dasharray="'+(C*pct)+' '+C+'" transform="rotate(-90 38 38)"/></svg><b>'+Math.round(pct*100)+'%</b></div></div>';
+ var PRE=[["🔥",l.warm],["🏃",l.cardio]];
  document.getElementById("pre").innerHTML=PRE.map(function(p,i){var on=S.p[i];return '<button class="'+(on?'on':'')+'" data-pre="'+i+'" aria-pressed="'+!!on+'"><span class="em">'+p[0]+'</span>'+p[1]+'</button>'}).join("");
  var f="";
- if(edit&&gone)f+='<button class="btn" id="restore">Restore '+gone+' deleted</button>';
- if(!edit)f+='<button class="btn" id="reset">New workout</button>';
+ if(edit){f+='<button class="btn" id="add">'+l.add+'</button>';if(gone)f+='<button class="btn" id="restore">'+l.restore+gone+l.deleted+'</button>';}
+ else f+='<button class="btn" id="reset">'+l.reset+'</button>';
  document.getElementById("foot").innerHTML=f;
- var ed=document.getElementById("ed");ed.textContent=edit?"Done":"Edit";ed.setAttribute("aria-pressed",edit);
+ var ed=document.getElementById("ed");ed.textContent=edit?l.done:l.edit;ed.setAttribute("aria-pressed",edit);
+ document.querySelectorAll(".lg").forEach(function(b){b.setAttribute("aria-pressed",b.dataset.lang===S.lang)});
 }
-function toast(){var el=document.getElementById("toast");el.classList.add("show");clearTimeout(tt);tt=setTimeout(function(){el.classList.remove("show");last=null;},5000);}
+function toast(msg,undo){var el=document.getElementById("toast");document.getElementById("tmsg").textContent=msg;var u=document.getElementById("undo");u.style.display=undo?"":"none";u.textContent=L().undo;el.classList.add("show");clearTimeout(tt);tt=setTimeout(function(){el.classList.remove("show");last=null;},undo?5000:2000);}
 document.addEventListener("click",function(ev){
  var b=ev.target.closest("button");if(!b)return;
  var t=S.tab,d=b.dataset;
- if(d.tab!==undefined){S.tab=+d.tab;}
+ if(d.lang!==undefined){S.lang=d.lang;}
+ else if(d.tab!==undefined){S.tab=+d.tab;}
  else if(b.id==="ed"){edit=!edit;document.getElementById("toast").classList.remove("show");}
  else if(d.pre!==undefined){S.p[d.pre]=!S.p[d.pre];}
  else if(d.done!==undefined){var k=key(t,d.done);S.d[k]=!S.d[k];}
  else if(d.w!==undefined){S.w[key(t,d.w)]=Math.max(0,kg(t,+d.w)+parseFloat(d.d));}
  else if(d.r!==undefined){S.r[key(t,d.r)]=Math.max(1,rp(t,+d.r)+parseInt(d.d,10));}
- else if(d.del!==undefined){var kk=key(t,d.del);S.x[kk]=true;last=kk;toast();}
+ else if(d.del!==undefined){var kk=key(t,d.del);S.x[kk]=true;last=kk;toast(L().del,true);}
  else if(b.id==="undo"){if(last){delete S.x[last];last=null;}document.getElementById("toast").classList.remove("show");}
+ else if(b.id==="add"){var n=L().newEx;S.add[t]=(S.add[t]||[]).concat([[n,20,8,"d",n]]);}
  else if(b.id==="restore"){Object.keys(S.x).forEach(function(k){if(k.indexOf(t+"-")===0)delete S.x[k];});}
- else if(b.id==="reset"){S.d={};S.p={};}
+ else if(b.id==="reset"){S.d={};S.p={};toast(L().cleared,false);}
  else return;
  save();render();
+});
+document.addEventListener("change",function(ev){
+ var el=ev.target,d=el.dataset,t=S.tab;
+ if(d.nm!==undefined){var v=el.value.trim(),k=key(t,d.nm);if(v){S.nm[k]=v;}else{delete S.nm[k];el.value=nameOf(t,+d.nm);}save();}
+ else if(d.gn!==undefined){var g=el.value.trim();if(g){S.gn[t]=g;}else{delete S.gn[t];el.value=gname(t);}save();renderTabs();}
 });
 render();
 </script>
